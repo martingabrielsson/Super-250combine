@@ -190,7 +190,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.75
 
   <section class="page">
     <div class="head">
-      <div class="eyebrow">MNQ &middot; Combine</div>
+      <div class="eyebrow">250 Super Combine in 90 days!</div>
       <div class="eyebrow" id="sessions">W1 &middot; 0 sessions</div>
     </div>
 
@@ -287,10 +287,10 @@ var TOP=15000, BOT=-10000, SPAN=TOP-BOT, MAXW=13, KEY="supercombine:v1";
 var entries=[], sign=1, plan=null, mem=null;
 
 async function load(){
-  try{ var r=await window.storage.get(KEY); entries=r&&r.value?JSON.parse(r.value):[]; }
+  try{ var v=localStorage.getItem(KEY); entries=v?JSON.parse(v):[]; }
   catch(e){ entries=mem||[]; }
 }
-async function persist(){ mem=entries; try{ await window.storage.set(KEY,JSON.stringify(entries)); }catch(e){} }
+async function persist(){ mem=entries; try{ localStorage.setItem(KEY,JSON.stringify(entries)); }catch(e){} }
 
 var TICK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
 var CROSS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
