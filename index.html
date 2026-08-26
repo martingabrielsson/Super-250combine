@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+<title>Super Combine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Saira+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:dark;
+  --green:#00E676;
+  --red:#FF3B30;
+  --amber:#FFB02E;
+  --dim:rgba(255,255,255,.55);
+  --dimmer:rgba(255,255,255,.22);
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --cond:"Saira Condensed","Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:#000;height:100%;overflow:hidden}
+.pager,.page,.scroll,.footer,.gauge,.scale,.qcard,.field{background:#000}
+body{font-family:var(--cond);color:#fff;-webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none}
+input{-webkit-user-select:text;user-select:text}
+
+
+/* ---------- deck (vertical: landing -> app) ---------- */
+.deck{height:100dvh;height:100vh;overflow-y:auto;overflow-x:hidden;scroll-snap-type:y mandatory;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;background:#000}
+.deck::-webkit-scrollbar{display:none}
+.screen{height:100dvh;height:100vh;width:100%;scroll-snap-align:start;scroll-snap-stop:always}
+.screen.app{overflow:hidden}
+
+/* ---------- landing ---------- */
+.landing{position:relative;--pg:#22B14C;--pr:#E32227;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:calc(env(safe-area-inset-top) + 22px) 20px calc(env(safe-area-inset-bottom) + 22px)}
+.poster{width:100%;max-width:420px;background:#fff;border-radius:3px;
+  padding:26px 24px 30px;display:flex;flex-direction:column;gap:26px;
+  box-shadow:0 0 0 12px #fff,0 26px 60px rgba(255,255,255,.09)}
+.chart{width:100%;height:auto;display:block}
+.quote{font-family:"Anton","Saira Condensed",Arial,sans-serif;color:#000;margin:0;
+  font-size:clamp(25px,7.4vw,37px);line-height:1.06;text-transform:uppercase;letter-spacing:.005em}
+.enter{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 26px);
+  background:none;border:none;color:rgba(255,255,255,.7);font-family:var(--cond);
+  font-size:11px;font-weight:600;letter-spacing:.28em;text-transform:uppercase;
+  display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+.enter .chev{display:block;width:22px;height:22px;animation:rise 1.9s ease-in-out infinite}
+.enter svg{width:100%;height:100%}
+@keyframes rise{0%,100%{transform:translateY(4px);opacity:.45}50%{transform:translateY(-3px);opacity:1}}
+@media (prefers-reduced-motion:reduce){.enter .chev{animation:none}}
+
+.pager{display:flex;height:100dvh;height:100vh;width:100%;overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.pager::-webkit-scrollbar{display:none}
+.page{flex:0 0 100%;width:100%;height:100%;scroll-snap-align:center;
+  padding:calc(env(safe-area-inset-top) + 12px) 18px calc(env(safe-area-inset-bottom) + 24px);
+  display:flex;flex-direction:column}
+.dots{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 7px);
+  display:flex;gap:7px;justify-content:center;pointer-events:none;z-index:5}
+.dots{opacity:0;transition:opacity .3s}
+.dots.on{opacity:1}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--dimmer)}
+.dot.on{background:#fff}
+
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.26em;text-transform:uppercase;color:var(--dim)}
+.head{display:flex;align-items:center;justify-content:space-between}
+
+/* ---------- gauge ---------- */
+.gauge{flex:1;min-height:0;display:grid;grid-template-columns:50px minmax(88px,116px) 52px;
+  justify-content:center;align-items:stretch;gap:10px;margin:14px 0 16px}
+.cell{display:flex;flex-direction:column;align-items:center}
+.cap{width:36%;height:13px;border:5px solid #fff;border-bottom:none;border-radius:5px 5px 0 0;background:#fff}
+.shell{position:relative;flex:1;width:100%;border:5px solid #fff;border-radius:18px;background:#fff}
+.inner{position:absolute;inset:0;border-radius:12px;overflow:hidden;background:#fff}
+.fill{position:absolute;left:0;right:0;height:0;transition:height .8s cubic-bezier(.22,.9,.28,1)}
+.fill.pos{bottom:40%;background:var(--green)}
+.fill.neg{top:60%;background:var(--red)}
+.zero{position:absolute;left:0;right:0;top:60%;height:0;border-top:2px dashed rgba(0,0,0,.6);transform:translateY(-1px)}
+.maxline{position:absolute;left:0;right:0;height:0;border-top:3px dotted #C8971A;
+  transform:translateY(-1.5px);transition:top .8s cubic-bezier(.22,.9,.28,1);z-index:3}
+
+.scale{position:relative;height:calc(100% - 23px);margin-top:18px}
+.tick{position:absolute;left:0;right:0;height:0;transform:translateY(-50%)}
+.tick .rule{position:absolute;top:0;height:1px;background:var(--dimmer)}
+.tick.major .rule{background:rgba(255,255,255,.65)}
+.tick label{position:absolute;top:50%;transform:translateY(-50%);font-family:var(--mono);
+  font-size:9px;font-weight:500;color:var(--dim);white-space:nowrap;line-height:1}
+.tick.major label{color:#fff;font-weight:600;font-size:10.5px}
+.scaleL .tick .rule{right:0;width:7px}
+.scaleL .tick.major .rule{width:12px}
+.scaleL .tick label{right:16px}
+.scaleR .tick .rule{left:0;width:7px}
+.scaleR .tick.major .rule{width:12px}
+.scaleR .tick label{left:16px;font-family:var(--cond);font-size:11px;letter-spacing:.08em;font-weight:600}
+.scaleR .tick.now label{color:var(--amber)}
+.scaleR .tick.now .rule{background:var(--amber);width:12px}
+
+/* ---------- page 1 footer ---------- */
+.footer{border-top:1px solid var(--dimmer);padding-top:14px}
+.fLabel{font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--dim);font-weight:600}
+.fBig{font-family:var(--mono);font-size:42px;font-weight:600;line-height:1;letter-spacing:-.035em;
+  font-variant-numeric:tabular-nums;margin-top:5px}
+.fBig.up{color:var(--green)}.fBig.down{color:var(--red)}.fBig.flat{color:#fff}
+.fRow{display:flex;justify-content:space-between;align-items:flex-end;margin-top:16px;gap:10px}
+.fCell .k{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);font-weight:600}
+.fCell .v{font-family:var(--mono);font-size:17px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums}
+.v.amber{color:var(--amber)}.v.gold{color:#E0AE22}.v.green{color:var(--green)}.v.red{color:var(--red)}
+
+/* ---------- page 2 ---------- */
+.p2title{font-size:27px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;margin:4px 0 16px}
+.scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:24px}
+.scroll::-webkit-scrollbar{display:none}
+.field{margin-bottom:18px}
+.label{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--dim);font-weight:600;margin-bottom:8px}
+input[type=date],input[type=text]{width:100%;background:#000;color:#fff;border:2px solid rgba(255,255,255,.6);
+  border-radius:10px;padding:13px 14px;font-family:var(--mono);font-size:17px;font-weight:500;appearance:none;outline:none}
+input:focus{border-color:#fff}
+input::placeholder{color:rgba(255,255,255,.35)}
+input[type=date]{color-scheme:dark}
+input[type=date]::-webkit-date-and-time-value{text-align:left;color:#fff}
+input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.75}
+.amount{display:flex;gap:9px}
+.sign{flex:0 0 56px;border:2px solid;border-radius:10px;background:#000;font-family:var(--mono);
+  font-size:22px;font-weight:600;cursor:pointer}
+.sign.plus{color:var(--green);border-color:var(--green)}
+.sign.minus{color:var(--red);border-color:var(--red)}
+.qcard{border:2px solid rgba(255,255,255,.6);border-radius:12px;padding:15px;transition:border-color .2s}
+.qcard.need{border-color:var(--red);animation:nudge .3s}
+@keyframes nudge{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.q{font-size:17px;line-height:1.36;color:#fff;font-weight:500;margin:0 0 15px}
+.ticks{display:flex;gap:10px}
+.tickbox{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;padding:13px 10px;background:#000;
+  border:2px solid rgba(255,255,255,.6);border-radius:10px;cursor:pointer}
+.box{width:20px;height:20px;border:2px solid #fff;border-radius:4px;display:grid;place-items:center;flex:0 0 auto}
+.box svg{width:13px;height:13px;opacity:0;transform:scale(.6);transition:all .15s;stroke:#fff}
+.tickbox[aria-checked=true] .box svg{opacity:1;transform:scale(1)}
+.tickbox b{font-size:16px;letter-spacing:.16em;text-transform:uppercase;font-weight:700}
+.tickbox.yes[aria-checked=true]{border-color:var(--green)}
+.tickbox.yes[aria-checked=true] .box{border-color:var(--green)}
+.tickbox.yes[aria-checked=true] b{color:var(--green)}
+.tickbox.yes[aria-checked=true] svg{stroke:var(--green)}
+.tickbox.no[aria-checked=true]{border-color:var(--red)}
+.tickbox.no[aria-checked=true] .box{border-color:var(--red)}
+.tickbox.no[aria-checked=true] b{color:var(--red)}
+.tickbox.no[aria-checked=true] svg{stroke:var(--red)}
+.save{width:100%;margin-top:18px;padding:17px;border-radius:11px;border:none;background:#fff;color:#000;
+  font-family:var(--cond);font-size:15px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;cursor:pointer}
+.logHead{display:flex;justify-content:space-between;align-items:center;margin:26px 0 6px;
+  border-top:1px solid var(--dimmer);padding-top:14px}
+.row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.1)}
+.row .d{font-family:var(--mono);font-size:13px;color:var(--dim)}
+.row .p{width:21px;height:21px;flex:0 0 auto;border:2px solid;border-radius:5px;display:grid;place-items:center}
+.row .p svg{width:13px;height:13px;stroke-width:3.5}
+.row .p.y{border-color:var(--green);color:var(--green)}
+.row .p.n{border-color:var(--red);color:var(--red)}
+.row .a{font-family:var(--mono);font-size:15px;font-weight:600;margin-left:auto;font-variant-numeric:tabular-nums}
+.row .a.up{color:var(--green)}.row .a.down{color:var(--red)}
+.row .x{background:none;border:none;color:var(--dimmer);font-size:19px;line-height:1;padding:0 2px;cursor:pointer}
+.empty{color:var(--dim);font-size:14px;padding:14px 0;line-height:1.5}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 34px);transform:translate(-50%,14px);
+  background:#fff;color:#000;padding:9px 18px;border-radius:100px;font-size:12px;font-weight:700;
+  letter-spacing:.18em;text-transform:uppercase;opacity:0;pointer-events:none;transition:all .25s;z-index:10}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+  <section class="screen landing" id="landing">
+    <div class="poster">
+      <svg class="chart" viewBox="0 0 336 155" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><line x1="13.5" y1="20" x2="13.5" y2="95" stroke="var(--pg)" stroke-width="2.2"/><rect x="8" y="25" width="11" height="45" fill="var(--pg)"/><line x1="33.5" y1="45" x2="33.5" y2="105" stroke="var(--pg)" stroke-width="2.2"/><rect x="28" y="55" width="11" height="30" fill="var(--pg)"/><line x1="53.5" y1="60" x2="53.5" y2="115" stroke="var(--pg)" stroke-width="2.2"/><rect x="48" y="70" width="11" height="30" fill="var(--pg)"/><line x1="73.5" y1="55" x2="73.5" y2="110" stroke="var(--pg)" stroke-width="2.2"/><rect x="68" y="62" width="11" height="38" fill="var(--pg)"/><line x1="93.5" y1="50" x2="93.5" y2="95" stroke="var(--pg)" stroke-width="2.2"/><rect x="88" y="68" width="11" height="10" fill="var(--pg)"/><line x1="113.5" y1="60" x2="113.5" y2="140" stroke="var(--pr)" stroke-width="2.2"/><rect x="108" y="75" width="11" height="55" fill="var(--pr)"/><line x1="133.5" y1="40" x2="133.5" y2="115" stroke="var(--pr)" stroke-width="2.2"/><rect x="128" y="55" width="11" height="20" fill="var(--pr)"/><line x1="153.5" y1="45" x2="153.5" y2="135" stroke="var(--pg)" stroke-width="2.2"/><rect x="148" y="60" width="11" height="50" fill="var(--pg)"/><line x1="173.5" y1="75" x2="173.5" y2="135" stroke="var(--pg)" stroke-width="2.2"/><rect x="168" y="95" width="11" height="25" fill="var(--pg)"/><line x1="193.5" y1="65" x2="193.5" y2="105" stroke="var(--pr)" stroke-width="2.2"/><rect x="188" y="80" width="11" height="15" fill="var(--pr)"/><line x1="213.5" y1="55" x2="213.5" y2="115" stroke="var(--pr)" stroke-width="2.2"/><rect x="208" y="68" width="11" height="37" fill="var(--pr)"/><line x1="233.5" y1="60" x2="233.5" y2="120" stroke="var(--pg)" stroke-width="2.2"/><rect x="228" y="70" width="11" height="35" fill="var(--pg)"/><line x1="253.5" y1="75" x2="253.5" y2="125" stroke="var(--pg)" stroke-width="2.2"/><rect x="248" y="98" width="11" height="7" fill="var(--pg)"/><line x1="273.5" y1="25" x2="273.5" y2="115" stroke="var(--pr)" stroke-width="2.2"/><rect x="268" y="40" width="11" height="60" fill="var(--pr)"/><line x1="293.5" y1="50" x2="293.5" y2="125" stroke="var(--pr)" stroke-width="2.2"/><rect x="288" y="108" width="11" height="7" fill="var(--pr)"/><line x1="313.5" y1="30" x2="313.5" y2="120" stroke="var(--pr)" stroke-width="2.2"/><rect x="308" y="55" width="11" height="60" fill="var(--pr)"/></svg>
+      <p class="quote">Trading doesn't just reveal your character, it also builds it if you stay in the game long enough.</p>
+    </div>
+    <button class="enter" id="enter" type="button">
+      <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg></span>
+      Swipe up to open
+    </button>
+  </section>
+
+  <section class="screen app">
+<div class="pager" id="pager">
+
+  <section class="page">
+    <div class="head">
+      <div class="eyebrow">MNQ &middot; Combine</div>
+      <div class="eyebrow" id="sessions">W1 &middot; 0 sessions</div>
+    </div>
+
+    <div class="gauge">
+      <div class="scale scaleL" id="scaleL"></div>
+      <div class="cell">
+        <div class="cap"></div>
+        <div class="shell">
+          <div class="inner">
+            <div class="fill pos" id="fillPos"></div>
+            <div class="fill neg" id="fillNeg"></div>
+            <div class="maxline" id="maxline"></div>
+            <div class="zero"></div>
+          </div>
+        </div>
+      </div>
+      <div class="scale scaleR" id="scaleR"></div>
+    </div>
+
+    <div class="footer">
+      <div class="fLabel" id="bigLabel">Profit</div>
+      <div class="fBig flat" id="bigVal">$0</div>
+      <div class="fRow">
+        <div class="fCell">
+          <div class="k">Left to 15k</div>
+          <div class="v" id="left">$15,000</div>
+        </div>
+        <div class="fCell" style="text-align:center">
+          <div class="k">% left</div>
+          <div class="v amber" id="leftPct">100%</div>
+        </div>
+        <div class="fCell" style="text-align:right">
+          <div class="k">Max loss</div>
+          <div class="v gold" id="maxLoss">-$10,000</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="eyebrow">Session log</div>
+    <div class="p2title">Register result</div>
+
+    <div class="scroll">
+      <div class="field">
+        <div class="label">Trading date</div>
+        <input type="date" id="date">
+      </div>
+
+      <div class="field">
+        <div class="label">Today's result</div>
+        <div class="amount">
+          <button class="sign plus" id="sign" type="button">+</button>
+          <input type="text" id="amount" inputmode="decimal" placeholder="0" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="label">Process check &middot; required</div>
+        <div class="qcard" id="qcard">
+          <p class="q">Did you make a pre-trade plan today?<br>Did you set up your trading station risk management according to plan?<br>Did you stick to the plan throughout the session?</p>
+          <div class="ticks">
+            <div class="tickbox yes" id="tYes" role="checkbox" aria-checked="false" tabindex="0">
+              <span class="box"><svg viewBox="0 0 24 24" fill="none" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+              <b>Yes</b>
+            </div>
+            <div class="tickbox no" id="tNo" role="checkbox" aria-checked="false" tabindex="0">
+              <span class="box"><svg viewBox="0 0 24 24" fill="none" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+              <b>No</b>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="save" id="save" type="button">Save session</button>
+
+      <div class="logHead">
+        <div class="eyebrow" id="discipline">Plan followed 0 / 0</div>
+      </div>
+      <div id="log"></div>
+    </div>
+  </section>
+</div>
+  </section>
+</div>
+
+<div class="dots"><div class="dot on" id="d0"></div><div class="dot" id="d1"></div></div>
+<div class="toast" id="toast">Saved</div>
+
+<script>
+(function(){
+"use strict";
+var TOP=15000, BOT=-10000, SPAN=TOP-BOT, MAXW=13, KEY="supercombine:v1";
+var entries=[], sign=1, plan=null, mem=null;
+
+async function load(){
+  try{ var r=await window.storage.get(KEY); entries=r&&r.value?JSON.parse(r.value):[]; }
+  catch(e){ entries=mem||[]; }
+}
+async function persist(){ mem=entries; try{ await window.storage.set(KEY,JSON.stringify(entries)); }catch(e){} }
+
+var TICK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+var CROSS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+function money(n){ return (n<0?"-$":"$")+Math.abs(Math.round(n)).toLocaleString("en-US"); }
+function kLabel(v){ return (v<0?"-":"")+(Math.abs(v)/1000)+"k"; }
+function pctFor(v){ return (TOP-v)/SPAN*100; }           // linear: 0 sits at 60% from top
+function weekTarget(w){ return w<=10 ? w*1000 : 10000+(w-10)*(5000/3); }
+function monday(d){ var x=new Date(d); var g=(x.getDay()+6)%7; x.setHours(0,0,0,0); x.setDate(x.getDate()-g); return x; }
+function currentWeek(){
+  if(!entries.length) return 1;
+  var first=monday(entries.map(function(e){return e.date;}).sort()[0]);
+  var w=Math.floor((monday(new Date())-first)/6048e5)+1;
+  return Math.max(1,w);
+}
+function total(){ return entries.reduce(function(a,e){return a+e.amount;},0); }
+// trailing max loss: sits 10k under the highest closed day, locks at breakeven
+function threshold(){
+  var run=0, peak=0;
+  entries.slice().sort(function(a,b){return a.date<b.date?1:-1;}).reverse().forEach(function(e){
+    run+=e.amount; if(run>peak) peak=run;
+  });
+  return Math.min(peak,-BOT)+BOT;
+}
+
+function buildScales(){
+  var h="";
+  for(var v=15000; v>=-10000; v-=1000){
+    var major=(v%5000===0);
+    h+='<div class="tick '+(major?"major":"")+'" style="top:'+pctFor(v)+'%"><div class="rule"></div>'+
+       '<label>'+kLabel(v)+'</label></div>';
+  }
+  document.getElementById("scaleL").innerHTML=h;
+  h="";
+  for(var w=1;w<=MAXW;w++){
+    var major=(w===1||w%2===0||w===13);
+    h+='<div class="tick '+(major?"major":"")+'" data-w="'+w+'" style="top:'+pctFor(weekTarget(w))+'%">'+
+       '<div class="rule"></div>'+(major?'<label>W'+w+'</label>':'')+'</div>';
+  }
+  document.getElementById("scaleR").innerHTML=h;
+}
+
+function render(){
+  var t=total(), w=currentWeek(), tgt=weekTarget(Math.min(w,MAXW));
+  var remaining=TOP-t, pctLeft=Math.max(0,remaining)/TOP*100;
+
+  document.getElementById("sessions").textContent="W"+Math.min(w,MAXW)+" \u00b7 "+entries.length+(entries.length===1?" session":" sessions");
+
+  var thr=threshold(), buffer=t-thr;
+  document.getElementById("maxline").style.top=pctFor(thr)+"%";
+  var ml=document.getElementById("maxLoss");
+  ml.textContent=money(thr-t)+(thr===0?" \u00b7 locked":"");
+  ml.className="v "+(buffer<=0?"red":"gold");
+
+  document.getElementById("fillPos").style.height=(t>0?Math.min(t,TOP)/SPAN*100:0)+"%";
+  document.getElementById("fillNeg").style.height=(t<0?Math.min(-t,-BOT)/SPAN*100:0)+"%";
+
+  Array.prototype.forEach.call(document.querySelectorAll("#scaleR .tick"),function(el){
+    el.classList.toggle("now", +el.getAttribute("data-w")===Math.min(w,MAXW));
+  });
+
+  var big=document.getElementById("bigVal");
+  big.textContent=money(t);
+  big.className="fBig "+(t>0?"up":t<0?"down":"flat");
+  document.getElementById("bigLabel").textContent = t<0 ? "Drawdown" : "Profit";
+
+  document.getElementById("left").textContent=money(Math.max(0,remaining));
+  var lp=document.getElementById("leftPct");
+  lp.textContent=(remaining<=0?"0":pctLeft.toFixed(remaining>=1000?0:1))+"%";
+  lp.className="v "+(remaining<=0?"green":"amber");
+
+  var yes=entries.filter(function(e){return e.plan;}).length;
+  document.getElementById("discipline").textContent="Plan followed "+yes+" / "+entries.length;
+
+  var log=document.getElementById("log");
+  if(!entries.length){ log.innerHTML='<div class="empty">No sessions yet. Fill in the date, the result and the process check above.</div>'; return; }
+  log.innerHTML=entries.slice().sort(function(a,b){return a.date<b.date?1:-1;}).map(function(e){
+    return '<div class="row"><div class="d">'+e.date.slice(5).replace("-","/")+'</div>'+
+      '<div class="p '+(e.plan?"y":"n")+'">'+(e.plan?TICK:CROSS)+'</div>'+
+      '<div class="a '+(e.amount>=0?"up":"down")+'">'+(e.amount>0?"+":"")+money(e.amount)+'</div>'+
+      '<button class="x" data-del="'+e.date+'">\u00d7</button></div>';
+  }).join("");
+  Array.prototype.forEach.call(log.querySelectorAll("[data-del]"),function(b){
+    b.addEventListener("click",function(){
+      entries=entries.filter(function(e){return e.date!==b.getAttribute("data-del");});
+      persist(); render(); toast("Removed");
+    });
+  });
+}
+
+var tt;
+function toast(m){var el=document.getElementById("toast");el.textContent=m;el.classList.add("on");
+  clearTimeout(tt);tt=setTimeout(function(){el.classList.remove("on");},1600);}
+
+function setPlan(v){ plan=v;
+  if(v!==null) document.getElementById("qcard").classList.remove("need");
+  document.getElementById("tYes").setAttribute("aria-checked",v===true);
+  document.getElementById("tNo").setAttribute("aria-checked",v===false); }
+document.getElementById("tYes").addEventListener("click",function(){setPlan(plan===true?null:true);});
+document.getElementById("tNo").addEventListener("click",function(){setPlan(plan===false?null:false);});
+
+var signBtn=document.getElementById("sign");
+signBtn.addEventListener("click",function(){ sign=-sign;
+  signBtn.textContent=sign>0?"+":"\u2212"; signBtn.className="sign "+(sign>0?"plus":"minus"); });
+
+document.getElementById("save").addEventListener("click",function(){
+  var d=document.getElementById("date").value;
+  var raw=document.getElementById("amount").value.replace(/[^\d.,-]/g,"").replace(",",".");
+  var n=parseFloat(raw);
+  if(!d){ toast("Pick a date"); return; }
+  if(isNaN(n)){ toast("Enter a result"); return; }
+  if(plan===null){ var qc=document.getElementById("qcard"); qc.classList.remove("need");
+    void qc.offsetWidth; qc.classList.add("need"); qc.scrollIntoView({behavior:"smooth",block:"center"});
+    toast("Answer yes or no"); return; }
+  var existed=entries.some(function(e){return e.date===d;});
+  entries=entries.filter(function(e){return e.date!==d;});
+  entries.push({date:d,amount:Math.abs(n)*sign,plan:plan});
+  persist(); render();
+  document.getElementById("amount").value=""; setPlan(null);
+  document.getElementById("amount").blur();
+  toast(existed?"Updated":"Saved");
+  document.getElementById("pager").scrollTo({left:0,behavior:"smooth"});
+});
+
+var deck=document.getElementById("deck"), dots=document.querySelector(".dots");
+document.getElementById("enter").addEventListener("click",function(){
+  deck.scrollTo({top:deck.clientHeight,behavior:"smooth"});
+});
+deck.addEventListener("scroll",function(){
+  dots.classList.toggle("on", deck.scrollTop > deck.clientHeight*0.6);
+});
+
+var pager=document.getElementById("pager");
+pager.addEventListener("scroll",function(){
+  var i=Math.round(pager.scrollLeft/pager.clientWidth);
+  document.getElementById("d0").className="dot"+(i===0?" on":"");
+  document.getElementById("d1").className="dot"+(i===1?" on":"");
+});
+
+(async function(){
+  var now=new Date();
+  document.getElementById("date").value=new Date(now.getTime()-now.getTimezoneOffset()*6e4).toISOString().slice(0,10);
+  buildScales(); await load(); render();
+})();
+})();
+</script>
+</body>
+</html>
